@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0e1a">
+<title>MeasureGlass Pro — Flooring Calculator</title>
+<meta name="description" content="Professional flooring measurement calculator with client and job management. Feet, inches, fractions. Waste calculation. Stairs mode. Job summaries.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--font:'Satoshi',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+--accent:#00d4ff;--accent-dim:rgba(0,212,255,.15);--accent-glow:rgba(0,212,255,.3);
+--accent2:#7c3aed;--accent2-dim:rgba(124,58,237,.15);
+--glass:rgba(255,255,255,.06);--glass-border:rgba(255,255,255,.10);--glass-hover:rgba(255,255,255,.10);
+--t1:rgba(255,255,255,.95);--t2:rgba(255,255,255,.55);--t3:rgba(255,255,255,.30);
+--danger:#ff5c6a;--danger-bg:rgba(255,92,106,.12);--success:#4ade80;--success-bg:rgba(74,222,128,.12);--warn:#fbbf24;--warn-bg:rgba(251,191,36,.12);
+--r:22px;--rs:16px;--rx:12px;
+--tr:200ms cubic-bezier(.16,1,.3,1);
+color-scheme:dark}
+html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-text-size-adjust:none}
+body{font-family:var(--font);color:var(--t1);min-height:100dvh;overflow-x:hidden;
+background:#0a0e1a;background:linear-gradient(160deg,#0a0e1a 0%,#0d1530 25%,#131b3a 45%,#0f1e3a 65%,#0a1628 100%);
+background-attachment:fixed}
+body::before{content:'';position:fixed;inset:0;
+background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(0,212,255,.04) 0%,transparent 70%),
+radial-gradient(ellipse 50% 50% at 80% 100%,rgba(124,58,237,.03) 0%,transparent 70%);
+pointer-events:none;z-index:0}
+.glass{background:rgba(255,255,255,.05);backdrop-filter:blur(28px) saturate(1.5);-webkit-backdrop-filter:blur(28px) saturate(1.5);
+border:1px solid var(--glass-border);border-radius:var(--r);box-shadow:0 4px 32px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.06)}
+.glass-sm{background:rgba(255,255,255,.04);backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);
+border:1px solid var(--glass-border);border-radius:var(--rs);box-shadow:0 2px 16px rgba(0,0,0,.12),inset 0 1px 0 rgba(255,255,255,.04)}
+.app{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:0 16px}
+
+/* SCREEN SYSTEM */
+.screen{display:none;min-height:100dvh;padding-bottom:24px;opacity:0;transform:translateX(20px);transition:opacity 250ms ease,transform 250ms ease}
+.screen.active{display:block;opacity:1;transform:translateX(0)}
+.screen.slide-out{opacity:0;transform:translateX(-20px)}
+
+/* COMMON */
+.top-bar{padding:calc(env(safe-area-inset-top,12px)+14px) 0 12px;display:flex;align-items:center;gap:12px}
+.back-btn{width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:12px;
+background:var(--glass);border:1px solid var(--glass-border);color:var(--t2);cursor:pointer;transition:all var(--tr);flex-shrink:0}
+.back-btn:hover{background:var(--glass-hover);color:var(--t1)}
+.back-btn:active{transform:scale(.93)}
+.back-btn svg{width:18px;height:18px}
+.top-title{font-size:20px;font-weight:700;letter-spacing:-.03em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-sub{font-size:11px;color:var(--t2);font-weight:500;margin-top:1px}
+.top-right{display:flex;gap:8px;flex-shrink:0}
+.icon-btn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:12px;
+background:var(--glass);border:1px solid var(--glass-border);color:var(--t2);cursor:pointer;transition:all var(--tr)}
+.icon-btn:hover,.icon-btn:active{background:var(--glass-hover);color:var(--t1)}
+.icon-btn:active{transform:scale(.93)}
+.icon-btn svg{width:20px;height:20px}
+.sec-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:10px}
+
+/* GREETING */
+.greeting{margin-top:8px;margin-bottom:20px}
+.greeting-text{font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1.2;
+background:linear-gradient(135deg,var(--t1) 0%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.greeting-sub{font-size:13px;color:var(--t2);margin-top:4px;font-weight:400}
+
+/* FAB */
+.fab{position:fixed;bottom:calc(28px + env(safe-area-inset-bottom));right:max(16px,calc((100vw - 480px)/2 + 16px));
+width:58px;height:58px;border-radius:29px;background:linear-gradient(135deg,var(--accent) 0%,#7c3aed 100%);color:#fff;border:none;cursor:pointer;
+display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(0,212,255,.25),0 2px 8px rgba(124,58,237,.2);transition:all var(--tr);z-index:60}
+.fab:hover{transform:scale(1.06) translateY(-2px);box-shadow:0 8px 32px rgba(0,212,255,.35),0 4px 12px rgba(124,58,237,.3)}
+.fab:active{transform:scale(.95)}
+.fab svg{width:24px;height:24px}
+
+/* LIST ITEMS */
+.list-item{padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all var(--tr);margin-bottom:8px;position:relative;overflow:hidden}
+.list-item::before{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(135deg,rgba(0,212,255,.03) 0%,rgba(124,58,237,.03) 100%);opacity:0;transition:opacity var(--tr)}
+.list-item:hover::before{opacity:1}
+.list-item:active{transform:scale(.98)}
+.list-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;font-weight:700}
+.list-icon.client{background:linear-gradient(135deg,rgba(0,212,255,.15),rgba(124,58,237,.1));color:var(--accent)}
+.list-icon.job{background:linear-gradient(135deg,rgba(74,222,128,.15),rgba(0,212,255,.08));color:var(--success)}
+.list-body{flex:1;min-width:0}
+.list-name{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list-meta{font-size:12px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.list-arrow{color:var(--t3);flex-shrink:0}
+.list-arrow svg{width:16px;height:16px}
+.list-actions{display:flex;gap:2px;flex-shrink:0}
+.list-act{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:10px;
+background:transparent;border:none;color:var(--t3);cursor:pointer;transition:all var(--tr)}
+.list-act:hover{background:rgba(255,255,255,.06);color:var(--t1)}
+.list-act.del:hover{background:var(--danger-bg);color:var(--danger)}
+.list-act svg{width:14px;height:14px}
+
+/* EMPTY STATES */
+.empty-state{text-align:center;padding:48px 24px}
+.empty-icon{width:64px;height:64px;margin:0 auto 16px;border-radius:20px;display:flex;align-items:center;justify-content:center;
+background:linear-gradient(135deg,rgba(0,212,255,.08),rgba(124,58,237,.06));border:1px solid rgba(255,255,255,.06)}
+.empty-icon svg{width:28px;height:28px;color:var(--accent);opacity:.7}
+.empty-title{font-size:15px;font-weight:600;color:var(--t1);margin-bottom:6px}
+.empty-sub{font-size:13px;color:var(--t3);line-height:1.5}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{width:100%;max-width:480px;background:rgba(16,20,36,.97);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
+border-top:1px solid var(--glass-border);border-radius:28px 28px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom));
+transform:translateY(100%);transition:transform 350ms cubic-bezier(.16,1,.3,1)}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 20px}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:18px;letter-spacing:-.02em}
+.modal-field{width:100%;padding:14px 16px;font-size:15px;font-weight:500;font-family:var(--font);color:var(--t1);
+background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:var(--rx);outline:none;transition:all var(--tr);margin-bottom:10px}
+.modal-field:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim);background:rgba(0,212,255,.02)}
+.modal-field::placeholder{color:var(--t3)}
+.modal-row{display:flex;gap:10px;margin-top:8px}
+.btn-primary{flex:1;padding:15px;font-size:15px;font-weight:600;font-family:var(--font);color:#fff;
+background:linear-gradient(135deg,var(--accent) 0%,#7c3aed 100%);border:none;border-radius:var(--rx);cursor:pointer;transition:all var(--tr)}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,212,255,.25)}
+.btn-primary:active{transform:translateY(0);opacity:1}
+.btn-secondary{flex:1;padding:15px;font-size:15px;font-weight:600;font-family:var(--font);color:var(--t1);
+background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--rx);cursor:pointer;transition:all var(--tr)}
+.btn-secondary:hover{background:var(--glass-hover)}
+.btn-full{width:100%;padding:16px;font-size:15px;font-weight:600;font-family:var(--font);color:#fff;
+background:linear-gradient(135deg,var(--accent) 0%,#7c3aed 100%);border:none;border-radius:var(--rx);cursor:pointer;transition:all var(--tr)}
+.btn-full:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 24px rgba(0,212,255,.3)}
+.btn-full:active{transform:translateY(0);opacity:1}
+.btn-danger{flex:1;padding:15px;font-size:15px;font-weight:600;font-family:var(--font);color:var(--danger);
+background:var(--danger-bg);border:1px solid rgba(255,92,106,.15);border-radius:var(--rx);cursor:pointer;transition:all var(--tr)}
+.btn-danger:hover{background:rgba(255,92,106,.18)}
+
+/* ====== JOB CALCULATOR (screen 3) ====== */
+.tab-bar{display:flex;gap:4px;margin-top:12px;padding:4px;border-radius:var(--rs);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+.tab{flex:1;padding:10px 0;text-align:center;font-size:13px;font-weight:600;color:var(--t2);
+border:none;background:none;border-radius:var(--rx);cursor:pointer;transition:all var(--tr)}
+.tab.active{background:linear-gradient(135deg,var(--accent),#7c3aed);color:#fff}
+.tab:not(.active):hover{color:var(--t1)}
+.measure-card{margin-top:14px;padding:20px 16px 18px}
+.area-type-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.area-type-btn{padding:7px 14px;font-size:12px;font-weight:600;font-family:var(--font);color:var(--t2);
+background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:22px;cursor:pointer;transition:all var(--tr);white-space:nowrap}
+.area-type-btn.active{background:var(--accent-dim);border-color:rgba(0,212,255,.4);color:var(--accent)}
+.area-type-btn:not(.active):hover{border-color:rgba(255,255,255,.18);color:var(--t1)}
+.name-input{width:100%;padding:12px 14px;font-size:14px;font-weight:500;font-family:var(--font);color:var(--t1);
+background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:var(--rx);outline:none;margin-bottom:14px;transition:all var(--tr)}
+.name-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.dim-label{font-size:12px;font-weight:500;color:var(--t2);margin-bottom:6px}
+.dim-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:12px;align-items:end}
+.dim-field{width:100%;padding:12px 8px;font-size:18px;font-weight:600;font-family:var(--font);color:var(--t1);
+background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:var(--rx);outline:none;
+transition:all var(--tr);-webkit-appearance:none;appearance:none;font-variant-numeric:tabular-nums;text-align:center}
+.dim-field::placeholder{color:var(--t3);font-weight:400;font-size:14px}
+.dim-field:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim);background:rgba(0,212,255,.03)}
+.dim-unit{font-size:10px;font-weight:500;color:var(--t3);text-align:center;margin-top:4px}
+.frac-sel{position:relative}
+.frac-btn{width:100%;padding:12px 6px;font-size:16px;font-weight:600;font-family:var(--font);color:var(--t1);
+background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:var(--rx);cursor:pointer;
+transition:all var(--tr);text-align:center;min-width:52px;white-space:nowrap}
+.frac-btn:hover{border-color:rgba(255,255,255,.18)}
+.frac-btn.open{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.frac-dd{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+background:rgba(16,20,36,.97);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);
+border:1px solid var(--glass-border);border-radius:var(--rs);padding:6px;
+display:none;z-index:80;box-shadow:0 8px 40px rgba(0,0,0,.5);min-width:180px}
+.frac-dd.show{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.frac-opt{padding:10px 4px;font-size:15px;font-weight:600;font-family:var(--font);color:var(--t2);
+background:none;border:1px solid transparent;border-radius:8px;cursor:pointer;text-align:center;transition:all var(--tr)}
+.frac-opt:hover{background:rgba(255,255,255,.06);color:var(--t1)}
+.frac-opt.active{background:var(--accent-dim);border-color:rgba(0,212,255,.3);color:var(--accent)}
+.results{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
+.res-tile{padding:14px 14px;border-radius:var(--rx);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);position:relative;overflow:hidden}
+.res-tile::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:2px 2px 0 0}
+.res-tile:first-child::before{background:linear-gradient(90deg,var(--t1),transparent)}
+.res-tile:last-child::before{background:linear-gradient(90deg,var(--accent),transparent)}
+.res-val{font-size:26px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1;margin-bottom:4px}
+.res-val.sqft{color:var(--t1)}.res-val.sqyd{color:var(--accent)}
+.res-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t2)}
+.stairs-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stairs-field-group{display:flex;flex-direction:column;gap:4px}
+.stairs-label{font-size:11px;font-weight:500;color:var(--t2)}
+.stairs-input{width:100%;padding:12px 8px;font-size:18px;font-weight:600;font-family:var(--font);color:var(--t1);
+background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:var(--rx);outline:none;
+transition:all var(--tr);text-align:center;font-variant-numeric:tabular-nums}
+.stairs-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.stairs-input::placeholder{color:var(--t3);font-weight:400;font-size:13px}
+
+/* NOTES SECTION */
+.notes-section{margin-top:14px;padding:16px}
+.notes-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;background:none;border:none;color:var(--t2);font-family:var(--font);font-size:13px;font-weight:600;transition:all var(--tr);width:100%;padding:0}
+.notes-toggle:hover{color:var(--t1)}
+.notes-toggle svg{width:16px;height:16px;transition:transform var(--tr)}
+.notes-toggle.open svg{transform:rotate(90deg)}
+.notes-toggle .note-count{font-size:11px;color:var(--t3);font-weight:400;margin-left:auto}
+.notes-area{overflow:hidden;max-height:0;transition:max-height 300ms cubic-bezier(.16,1,.3,1)}
+.notes-area.show{max-height:200px}
+.notes-textarea{width:100%;padding:12px 14px;font-size:13px;font-weight:400;font-family:var(--font);color:var(--t1);
+background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:var(--rx);outline:none;
+transition:all var(--tr);resize:none;min-height:70px;margin-top:10px;line-height:1.5}
+.notes-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.notes-textarea::placeholder{color:var(--t3)}
+
+.waste-section{margin-top:14px;padding:14px 16px}
+.waste-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.waste-btn{padding:8px 14px;font-size:13px;font-weight:600;font-family:var(--font);color:var(--t2);
+background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:22px;cursor:pointer;transition:all var(--tr)}
+.waste-btn.active{background:var(--warn-bg);border-color:rgba(251,191,36,.35);color:var(--warn)}
+.waste-btn:not(.active):hover{border-color:rgba(255,255,255,.18);color:var(--t1)}
+.waste-custom{width:64px;padding:8px 6px;font-size:13px;font-weight:600;font-family:var(--font);color:var(--t1);
+background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:22px;outline:none;text-align:center;transition:all var(--tr)}
+.waste-custom:focus{border-color:var(--warn);box-shadow:0 0 0 2px rgba(251,191,36,.12)}
+.waste-custom::placeholder{color:var(--t3);font-weight:400}
+.areas-section{margin-top:18px}
+.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 4px}
+.sec-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t2)}
+.clear-btn{font-size:12px;font-weight:500;color:var(--danger);cursor:pointer;background:none;border:none;padding:6px 10px;border-radius:8px;transition:all var(--tr);font-family:var(--font)}
+.clear-btn:hover{background:var(--danger-bg)}
+.areas-list{display:flex;flex-direction:column;gap:8px}
+.area-item{padding:14px 14px;display:flex;align-items:center;gap:10px;transition:all var(--tr);animation:slideUp 250ms ease-out}
+.area-badge{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 8px currentColor}
+.area-badge.room{background:#00d4ff;color:rgba(0,212,255,.4)}.area-badge.hallway{background:#a78bfa;color:rgba(167,139,250,.4)}
+.area-badge.closet{background:#f472b6;color:rgba(244,114,182,.4)}.area-badge.landing{background:#fbbf24;color:rgba(251,191,36,.4)}
+.area-badge.stairs{background:#fb923c;color:rgba(251,146,60,.4)}.area-badge.custom{background:#4ade80;color:rgba(74,222,128,.4)}
+.area-info{flex:1;min-width:0}
+.area-name{font-size:13px;font-weight:600;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.area-dims{font-size:11px;color:var(--t2);font-variant-numeric:tabular-nums}
+.area-vals{text-align:right;flex-shrink:0}
+.area-sqft{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.area-sqyd{font-size:11px;color:var(--accent);font-weight:500;font-variant-numeric:tabular-nums;margin-top:1px}
+.area-actions{display:flex;gap:2px;flex-shrink:0}
+.area-act{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:8px;
+background:transparent;border:none;color:var(--t3);cursor:pointer;transition:all var(--tr)}
+.area-act:hover,.area-act:active{background:rgba(255,255,255,.06);color:var(--t1)}
+.area-act.del:hover,.area-act.del:active{background:var(--danger-bg);color:var(--danger)}
+.area-act svg{width:14px;height:14px}
+.panel{display:none}.panel.active{display:block}
+
+/* TOTALS BAR */
+.totals-bar{position:fixed;bottom:0;left:0;right:0;z-index:50;
+background:rgba(10,14,26,.92);backdrop-filter:blur(32px) saturate(1.5);-webkit-backdrop-filter:blur(32px) saturate(1.5);
+border-top:1px solid rgba(255,255,255,.08);padding:12px 20px calc(12px + env(safe-area-inset-bottom));display:none}
+.totals-bar.show{display:block}
+.totals-inner{max-width:480px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:4px}
+.total-item{display:flex;flex-direction:column;align-items:center;flex:1}
+.total-val{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;line-height:1.2}
+.total-val.sqft{color:var(--t1)}.total-val.sqyd{color:var(--accent)}.total-val.adj{color:var(--warn)}.total-val.cost{color:var(--success)}
+.total-lbl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--t2);margin-top:2px}
+.total-div{width:1px;height:28px;background:rgba(255,255,255,.08);flex-shrink:0}
+
+/* SUMMARY */
+.summary-overlay{position:fixed;inset:0;z-index:200;background:rgba(10,14,26,.97);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);
+display:none;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.summary-overlay.open{display:block}
+.summary-content{max-width:480px;margin:0 auto;padding:20px 16px calc(24px + env(safe-area-inset-bottom))}
+.summary-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-top:calc(env(safe-area-inset-top,12px)+8px)}
+.summary-title{font-size:20px;font-weight:700;letter-spacing:-.02em}
+.summary-close{width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:12px;
+background:var(--glass);border:1px solid var(--glass-border);color:var(--t2);cursor:pointer;transition:all var(--tr)}
+.summary-close:hover{background:var(--glass-hover);color:var(--t1)}
+.summary-close svg{width:18px;height:18px}
+.summary-job-name{font-size:13px;color:var(--t2);margin-bottom:16px;line-height:1.5}
+.summary-card{padding:14px;margin-bottom:8px}
+.summary-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.summary-row:last-child{border-bottom:none}
+.summary-row-name{font-size:13px;font-weight:500;color:var(--t2)}
+.summary-row-val{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.summary-total-card{padding:18px;margin-top:14px}
+.summary-total-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0}
+.summary-total-label{font-size:13px;font-weight:500;color:var(--t2)}
+.summary-total-val{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.summary-total-val.highlight{color:var(--accent);font-size:18px}
+.summary-total-val.warn{color:var(--warn)}
+.summary-total-val.success{color:var(--success)}
+.summary-divider{height:1px;background:rgba(255,255,255,.06);margin:8px 0}
+.summary-actions{display:flex;gap:10px;margin-top:18px}
+.summary-notes{margin-top:14px;padding:14px;border-radius:var(--rx);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05)}
+.summary-notes-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t2);margin-bottom:6px}
+.summary-notes-text{font-size:13px;color:var(--t2);line-height:1.5;white-space:pre-wrap}
+
+/* DRAWER */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);z-index:100;opacity:0;pointer-events:none;transition:opacity 250ms ease}
+.drawer-overlay.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;bottom:0;left:0;right:0;z-index:101;background:rgba(16,20,36,.96);
+backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border-top:1px solid var(--glass-border);
+border-radius:28px 28px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));max-width:480px;
+margin:0 auto;transform:translateY(100%);transition:transform 350ms cubic-bezier(.16,1,.3,1)}
+.drawer.open{transform:translateY(0)}
+.drawer-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 16px}
+.drawer-title{font-size:18px;font-weight:700;margin-bottom:16px;letter-spacing:-.02em}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
+.setting-label{font-size:14px;font-weight:500;color:var(--t2)}
+.toggle{position:relative;width:50px;height:28px;border-radius:14px;background:rgba(255,255,255,.08);border:none;cursor:pointer;transition:background var(--tr)}
+.toggle.on{background:linear-gradient(135deg,var(--accent),#7c3aed)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;
+transition:transform var(--tr);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.toggle.on::after{transform:translateX(22px)}
+.price-wrap{margin-top:10px;overflow:hidden;max-height:0;transition:max-height 300ms cubic-bezier(.16,1,.3,1)}
+.price-wrap.show{max-height:100px}
+.price-row{position:relative}
+.price-row .sym{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:15px;font-weight:500;color:var(--t2)}
+.price-field{width:100%;padding:14px 16px 14px 30px;font-size:17px;font-weight:600;font-family:var(--font);color:var(--t1);
+background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:var(--rx);outline:none;transition:all var(--tr);font-variant-numeric:tabular-nums}
+.price-field:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.price-hint{font-size:11px;color:var(--t3);margin-top:5px}
+.setting-divider{height:1px;background:rgba(255,255,255,.05);margin:12px 0}
+.job-label{font-size:13px;font-weight:500;color:var(--t2);margin-bottom:6px}
+.job-field{width:100%;padding:12px 14px;font-size:14px;font-weight:500;font-family:var(--font);color:var(--t1);
+background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:var(--rx);outline:none;transition:all var(--tr)}
+.job-field:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+
+/* TOAST */
+.toast{position:fixed;top:calc(env(safe-area-inset-top,12px)+16px);left:50%;transform:translateX(-50%) translateY(-100px);
+background:rgba(16,20,36,.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+border:1px solid rgba(255,255,255,.08);border-radius:var(--rs);padding:12px 20px;font-size:13px;font-weight:600;
+z-index:300;transition:transform 350ms cubic-bezier(.16,1,.3,1);pointer-events:none;white-space:nowrap;
+display:flex;align-items:center;gap:8px}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.success{color:var(--success);border-color:rgba(74,222,128,.15)}
+.toast.warn{color:var(--warn);border-color:rgba(251,191,36,.15)}
+.toast.error{color:var(--danger);border-color:rgba(255,92,106,.15)}
+.toast-icon{width:16px;height:16px;flex-shrink:0}
+
+/* CONFIRM DIALOG */
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:250;display:none;align-items:center;justify-content:center;padding:20px}
+.confirm-overlay.open{display:flex}
+.confirm-box{background:rgba(16,20,36,.97);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border:1px solid var(--glass-border);
+border-radius:var(--r);padding:24px 20px;max-width:340px;width:100%;text-align:center;
+transform:scale(.9);opacity:0;transition:all 200ms cubic-bezier(.16,1,.3,1)}
+.confirm-overlay.open .confirm-box{transform:scale(1);opacity:1}
+.confirm-icon{width:48px;height:48px;margin:0 auto 14px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+background:var(--danger-bg);border:1px solid rgba(255,92,106,.1)}
+.confirm-icon svg{width:22px;height:22px;color:var(--danger)}
+.confirm-title{font-size:16px;font-weight:700;margin-bottom:6px}
+.confirm-msg{font-size:13px;color:var(--t2);line-height:1.5;margin-bottom:18px}
+.confirm-actions{display:flex;gap:10px}
+
+/* STATS BAR */
+.stats-bar{display:flex;gap:8px;margin-bottom:16px}
+.stat-card{flex:1;padding:14px 12px;border-radius:var(--rs);background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);text-align:center}
+.stat-val{font-size:22px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+background:linear-gradient(135deg,var(--accent),#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);margin-top:2px}
+
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+::selection{background:var(--accent-dim);color:var(--t1)}
+input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type="number"]{-moz-appearance:textfield}
+.footer{text-align:center;padding:20px;margin-top:8px}
+.footer-text{font-size:11px;color:var(--t3)}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ==================== SCREEN 1: CLIENTS ==================== -->
+<div class="screen active" id="screenClients">
+  <div class="top-bar">
+    <svg style="width:40px;height:40px;flex-shrink:0" viewBox="0 0 36 36" fill="none" aria-label="Logo">
+      <rect x="2" y="2" width="32" height="32" rx="8" stroke="url(#lg)" stroke-width="2.5" fill="none"/>
+      <path d="M10 26V14l8-4 8 4v12" stroke="url(#lg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <path d="M10 26l8-4 8 4" stroke="rgba(255,255,255,.3)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <defs><linearGradient id="lg" x1="2" y1="2" x2="34" y2="34" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#00d4ff"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs>
+    </svg>
+    <div><div class="top-title">MeasureGlass</div><div class="top-sub">Pro Flooring Calculator</div></div>
+  </div>
+  <div class="greeting">
+    <div class="greeting-text" id="greetingText">Good morning</div>
+    <div class="greeting-sub" id="greetingSub">Ready to measure something great?</div>
+  </div>
+  <div class="stats-bar" id="statsBar"></div>
+  <div style="margin-top:4px"><div class="sec-label">Your Clients</div></div>
+  <div id="clientsList"></div>
+  <button class="fab" id="addClientFab" aria-label="Add client">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+  <footer class="footer"><span class="footer-text">MeasureGlass Pro</span></footer>
+</div>
+
+<!-- ==================== SCREEN 2: JOBS ==================== -->
+<div class="screen" id="screenJobs">
+  <div class="top-bar">
+    <button class="back-btn" id="backToClients">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div style="flex:1;min-width:0"><div class="top-title" id="clientTitle"></div><div class="top-sub" id="clientSub"></div></div>
+    <div class="top-right">
+      <button class="icon-btn" id="editClientBtn" aria-label="Edit client">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+    </div>
+  </div>
+  <div style="margin-top:14px"><div class="sec-label">Jobs</div></div>
+  <div id="jobsList"></div>
+  <button class="fab" id="addJobFab" aria-label="Add job">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+  <footer class="footer"><span class="footer-text">MeasureGlass Pro</span></footer>
+</div>
+
+<!-- ==================== SCREEN 3: JOB CALCULATOR ==================== -->
+<div class="screen" id="screenCalc">
+  <div class="top-bar">
+    <button class="back-btn" id="backToJobs">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div style="flex:1;min-width:0"><div class="top-title" id="calcTitle"></div><div class="top-sub" id="calcSub"></div></div>
+    <div class="top-right">
+      <button class="icon-btn" id="summaryBtn" aria-label="Summary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </button>
+      <button class="icon-btn" id="settingsBtn" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="tab-bar"><button class="tab active" data-tab="room">Room</button><button class="tab" data-tab="stairs">Stairs</button></div>
+
+  <!-- ROOM PANEL -->
+  <div class="panel active" id="panelRoom">
+    <div class="measure-card glass">
+      <div class="sec-label">Measure Area</div>
+      <div class="area-type-row" id="areaTypeRow">
+        <button class="area-type-btn active" data-type="room">Room</button>
+        <button class="area-type-btn" data-type="hallway">Hallway</button>
+        <button class="area-type-btn" data-type="closet">Closet</button>
+        <button class="area-type-btn" data-type="landing">Landing</button>
+        <button class="area-type-btn" data-type="custom">Custom</button>
+      </div>
+      <input type="text" class="name-input" id="roomName" placeholder="Living Room" autocomplete="off">
+      <div class="dim-label">Length</div>
+      <div class="dim-row">
+        <div><input type="number" class="dim-field" id="lFt" inputmode="numeric" placeholder="0" min="0" autocomplete="off"><div class="dim-unit">ft</div></div>
+        <div><input type="number" class="dim-field" id="lIn" inputmode="numeric" placeholder="0" min="0" max="11" autocomplete="off"><div class="dim-unit">in</div></div>
+        <div class="frac-sel"><button class="frac-btn" id="lFracBtn" type="button">0</button><div class="dim-unit">frac</div>
+          <div class="frac-dd" id="lFracDD">
+            <button class="frac-opt active" data-val="0" type="button">0</button><button class="frac-opt" data-val="0.125" type="button">&#x215B;</button>
+            <button class="frac-opt" data-val="0.25" type="button">&#xBC;</button><button class="frac-opt" data-val="0.375" type="button">&#x215C;</button>
+            <button class="frac-opt" data-val="0.5" type="button">&#xBD;</button><button class="frac-opt" data-val="0.625" type="button">&#x215D;</button>
+            <button class="frac-opt" data-val="0.75" type="button">&#xBE;</button><button class="frac-opt" data-val="0.875" type="button">&#x215E;</button>
+          </div></div>
+      </div>
+      <div class="dim-label">Width</div>
+      <div class="dim-row">
+        <div><input type="number" class="dim-field" id="wFt" inputmode="numeric" placeholder="0" min="0" autocomplete="off"><div class="dim-unit">ft</div></div>
+        <div><input type="number" class="dim-field" id="wIn" inputmode="numeric" placeholder="0" min="0" max="11" autocomplete="off"><div class="dim-unit">in</div></div>
+        <div class="frac-sel"><button class="frac-btn" id="wFracBtn" type="button">0</button><div class="dim-unit">frac</div>
+          <div class="frac-dd" id="wFracDD">
+            <button class="frac-opt active" data-val="0" type="button">0</button><button class="frac-opt" data-val="0.125" type="button">&#x215B;</button>
+            <button class="frac-opt" data-val="0.25" type="button">&#xBC;</button><button class="frac-opt" data-val="0.375" type="button">&#x215C;</button>
+            <button class="frac-opt" data-val="0.5" type="button">&#xBD;</button><button class="frac-opt" data-val="0.625" type="button">&#x215D;</button>
+            <button class="frac-opt" data-val="0.75" type="button">&#xBE;</button><button class="frac-opt" data-val="0.875" type="button">&#x215E;</button>
+          </div></div>
+      </div>
+      <div class="results">
+        <div class="res-tile"><div class="res-val sqft" id="liveSqFt">0</div><div class="res-lbl">Square Feet</div></div>
+        <div class="res-tile"><div class="res-val sqyd" id="liveSqYd">0</div><div class="res-lbl">Square Yards</div></div>
+      </div>
+      <button class="btn-full" id="addRoomBtn">Add to Job</button>
+    </div>
+  </div>
+
+  <!-- STAIRS PANEL -->
+  <div class="panel" id="panelStairs">
+    <div class="measure-card glass">
+      <div class="sec-label">Stairs Calculator</div>
+      <input type="text" class="name-input" id="stairsName" placeholder="Main Stairs" autocomplete="off">
+      <div class="stairs-grid">
+        <div class="stairs-field-group"><div class="stairs-label">Number of Steps</div><input type="number" class="stairs-input" id="stSteps" inputmode="numeric" placeholder="13" min="1" autocomplete="off"></div>
+        <div class="stairs-field-group"><div class="stairs-label">Tread Width (in)</div><input type="number" class="stairs-input" id="stWidth" inputmode="decimal" placeholder="36" min="0" step="any" autocomplete="off"></div>
+        <div class="stairs-field-group"><div class="stairs-label">Tread Depth (in)</div><input type="number" class="stairs-input" id="stDepth" inputmode="decimal" placeholder="10" min="0" step="any" autocomplete="off"></div>
+        <div class="stairs-field-group"><div class="stairs-label">Riser Height (in)</div><input type="number" class="stairs-input" id="stRiser" inputmode="decimal" placeholder="7.5" min="0" step="any" autocomplete="off"></div>
+      </div>
+      <div class="results">
+        <div class="res-tile"><div class="res-val sqft" id="stairsSqFt">0</div><div class="res-lbl">Square Feet</div></div>
+        <div class="res-tile"><div class="res-val sqyd" id="stairsSqYd">0</div><div class="res-lbl">Square Yards</div></div>
+      </div>
+      <button class="btn-full" id="addStairsBtn">Add to Job</button>
+    </div>
+  </div>
+
+  <!-- NOTES SECTION -->
+  <div class="notes-section glass-sm" id="notesSection">
+    <button class="notes-toggle" id="notesToggle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      Job Notes
+      <span class="note-count" id="noteCount"></span>
+    </button>
+    <div class="notes-area" id="notesArea">
+      <textarea class="notes-textarea" id="jobNotesInline" placeholder="Address, material details, special instructions..." autocomplete="off"></textarea>
+    </div>
+  </div>
+
+  <div class="waste-section glass-sm">
+    <div class="sec-label" style="margin-bottom:6px">Waste Factor</div>
+    <div class="waste-row" id="wasteRow">
+      <button class="waste-btn" data-w="0">0%</button><button class="waste-btn" data-w="5">5%</button>
+      <button class="waste-btn active" data-w="10">10%</button><button class="waste-btn" data-w="12">12%</button>
+      <input type="number" class="waste-custom" id="wasteCustom" inputmode="numeric" placeholder="%" min="0" max="50" autocomplete="off">
+    </div>
+  </div>
+  <div class="areas-section">
+    <div class="sec-header"><div class="sec-title" id="jobAreasTitle">Job Areas</div><button class="clear-btn" id="clearAllBtn" style="display:none">Clear All</button></div>
+    <div class="areas-list" id="areasList"></div>
+  </div>
+  <footer class="footer"><span class="footer-text">MeasureGlass Pro</span></footer>
+</div>
+
+</div><!-- /app -->
+
+<!-- MODAL for client/job creation -->
+<div class="modal-overlay" id="modalOverlay"><div class="modal" id="modal">
+  <div class="modal-handle"></div>
+  <div class="modal-title" id="modalTitle"></div>
+  <div id="modalBody"></div>
+</div></div>
+
+<!-- SETTINGS DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-title">Job Settings</div>
+  <div class="setting-row"><span class="setting-label">Show pricing</span><button class="toggle" id="pricingToggle"></button></div>
+  <div class="price-wrap" id="priceWrap">
+    <div class="price-row"><span class="sym">$</span><input type="number" class="price-field" id="priceInput" inputmode="decimal" placeholder="0.00" min="0" step="any" autocomplete="off"></div>
+    <div class="price-hint">Price per square yard</div>
+  </div>
+  <div class="setting-divider"></div>
+  <div class="job-label">Job name</div>
+  <input type="text" class="job-field" id="jobNameInput" placeholder="Job name" autocomplete="off">
+</div>
+
+<!-- SUMMARY OVERLAY -->
+<div class="summary-overlay" id="summaryOverlay"><div class="summary-content" id="summaryContent"></div></div>
+
+<!-- TOTALS BAR -->
+<div class="totals-bar" id="totalsBar">
+  <div class="totals-inner" id="totalsInner">
+    <div class="total-item"><div class="total-val sqft" id="totalSqFt">0</div><div class="total-lbl">Raw Sq Ft</div></div>
+    <div class="total-div"></div>
+    <div class="total-item"><div class="total-val sqyd" id="totalSqYd">0</div><div class="total-lbl">Raw Sq Yd</div></div>
+    <div class="total-div"></div>
+    <div class="total-item"><div class="total-val adj" id="totalAdj">0</div><div class="total-lbl">+ Waste</div></div>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+    <div class="confirm-title" id="confirmTitle">Delete?</div>
+    <div class="confirm-msg" id="confirmMsg">This action cannot be undone.</div>
+    <div class="confirm-actions">
+      <button class="btn-secondary" id="confirmCancel">Cancel</button>
+      <button class="btn-danger" id="confirmOk">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+// ========== STORE ==========
+var _s=(function(){try{var s=window['local'+'Storage'];s.setItem('_t','1');s.removeItem('_t');return s}catch(e){return null}})();
+function saveAll(){if(!_s)return;try{_s.setItem('mg3',JSON.stringify(DB))}catch(e){}}
+function loadAll(){if(!_s)return;try{var d=_s.getItem('mg3');if(d)DB=JSON.parse(d)}catch(e){}}
+
+// ========== DATA ==========
+var DB = { clients:[], activeClientId:null, activeJobId:null };
+function gid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+loadAll();
+if(!DB.clients) DB.clients=[];
+
+function getClient(id){return DB.clients.find(function(c){return c.id===id})}
+function getJob(cid,jid){var c=getClient(cid);if(!c)return null;return (c.jobs||[]).find(function(j){return j.id===jid})}
+
+// ========== UTIL ==========
+var $=function(id){return document.getElementById(id)};
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function fmt(n,d){if(n===0)return'0';d=d===undefined?2:d;if(Number.isInteger(n)||Math.abs(n-Math.round(n))<.005)return Math.round(n).toLocaleString('en-US');return n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:d})}
+function fmtC(n){return'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function toDec(ft,inc,frac){return(parseFloat(ft)||0)+((parseFloat(inc)||0)+(parseFloat(frac)||0))/12}
+function fmtDim(ft,inc,frac){var p=[];var f=parseInt(ft)||0,i=parseInt(inc)||0,fr=parseFloat(frac)||0;if(f>0)p.push(f+"'");var fl=fracLbl(fr);if(i>0&&fl!=='0')p.push(i+fl+'"');else if(i>0)p.push(i+'"');else if(fl!=='0')p.push(fl+'"');return p.join(' ')||'0'}
+function fracLbl(v){v=parseFloat(v)||0;if(v===0)return'0';if(Math.abs(v-.125)<.001)return'\u215B';if(Math.abs(v-.25)<.001)return'\u00BC';if(Math.abs(v-.375)<.001)return'\u215C';if(Math.abs(v-.5)<.001)return'\u00BD';if(Math.abs(v-.625)<.001)return'\u215D';if(Math.abs(v-.75)<.001)return'\u00BE';if(Math.abs(v-.875)<.001)return'\u215E';return'0'}
+
+// ========== GREETING ==========
+function updateGreeting(){
+  var h=new Date().getHours();
+  var g='Good evening';
+  if(h>=5&&h<12)g='Good morning';
+  else if(h>=12&&h<17)g='Good afternoon';
+  $('greetingText').textContent=g;
+  var subs=['Ready to measure something great?','Let\'s get to work.','What are we measuring today?','Time to get precise.','Another day, another floor.'];
+  $('greetingSub').textContent=subs[Math.floor(Math.random()*subs.length)];
+}
+
+// ========== STATS ==========
+function renderStats(){
+  var totalClients=DB.clients.length;
+  var totalJobs=0,totalAreas=0;
+  DB.clients.forEach(function(c){var j=c.jobs||[];totalJobs+=j.length;j.forEach(function(jj){totalAreas+=(jj.areas||[]).length})});
+  if(totalClients===0){$('statsBar').style.display='none';return}
+  $('statsBar').style.display='flex';
+  $('statsBar').innerHTML=
+    '<div class="stat-card"><div class="stat-val">'+totalClients+'</div><div class="stat-label">Clients</div></div>'+
+    '<div class="stat-card"><div class="stat-val">'+totalJobs+'</div><div class="stat-label">Jobs</div></div>'+
+    '<div class="stat-card"><div class="stat-val">'+totalAreas+'</div><div class="stat-label">Areas</div></div>';
+}
+
+// ========== TOAST ==========
+var toast=$('toast');var toastTimer=null;
+function showToast(msg,type){
+  type=type||'success';
+  clearTimeout(toastTimer);
+  toast.className='toast '+type;
+  var icons={
+    success:'<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+    warn:'<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    error:'<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+  };
+  toast.innerHTML=(icons[type]||icons.success)+' '+esc(msg);
+  toast.classList.add('show');
+  toastTimer=setTimeout(function(){toast.classList.remove('show')},2200);
+}
+
+// ========== CONFIRM DIALOG ==========
+var confirmCallback=null;
+function showConfirm(title,msg,onConfirm){
+  $('confirmTitle').textContent=title;
+  $('confirmMsg').textContent=msg;
+  confirmCallback=onConfirm;
+  $('confirmOverlay').classList.add('open');
+}
+$('confirmCancel').addEventListener('click',function(){$('confirmOverlay').classList.remove('open');confirmCallback=null});
+$('confirmOk').addEventListener('click',function(){$('confirmOverlay').classList.remove('open');if(confirmCallback)confirmCallback();confirmCallback=null});
+$('confirmOverlay').addEventListener('click',function(e){if(e.target===$('confirmOverlay')){$('confirmOverlay').classList.remove('open');confirmCallback=null}});
+
+// ========== SCREEN NAV ==========
+var screens={clients:$('screenClients'),jobs:$('screenJobs'),calc:$('screenCalc')};
+var totalsBar=$('totalsBar');
+function showScreen(name){
+  Object.keys(screens).forEach(function(k){screens[k].classList.toggle('active',k===name)});
+  totalsBar.classList.toggle('show',name==='calc');
+  document.body.style.paddingBottom = name==='calc'?'calc(90px + env(safe-area-inset-bottom))':'0';
+}
+
+// ========== SCREEN 1: CLIENTS ==========
+function renderClients(){
+  updateGreeting();
+  renderStats();
+  var el=$('clientsList');
+  if(DB.clients.length===0){
+    el.innerHTML='<div class="empty-state">'+
+      '<div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'+
+      '<div class="empty-title">No clients yet</div>'+
+      '<div class="empty-sub">Tap the + button to add your first client<br>and start measuring.</div></div>';return}
+  var h='';
+  DB.clients.forEach(function(c){
+    var jCount=(c.jobs||[]).length;
+    var initials=(c.name||'?').split(' ').map(function(w){return w[0]}).join('').slice(0,2).toUpperCase();
+    h+='<div class="list-item glass-sm" data-cid="'+c.id+'">'+
+      '<div class="list-icon client">'+initials+'</div>'+
+      '<div class="list-body"><div class="list-name">'+esc(c.name)+'</div>'+
+      '<div class="list-meta">'+(c.phone?esc(c.phone)+' &middot; ':'')+jCount+' job'+(jCount!==1?'s':'')+(c.address?' &middot; '+esc(c.address):'')+'</div></div>'+
+      '<div class="list-actions">'+
+        '<button class="list-act del" data-cid="'+c.id+'" title="Delete client"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'+
+      '</div>'+
+      '<div class="list-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>'+
+    '</div>';
+  });
+  el.innerHTML=h;
+  el.querySelectorAll('.list-item').forEach(function(item){
+    item.addEventListener('click',function(e){
+      if(e.target.closest('.list-act'))return;
+      openClient(item.dataset.cid);
+    });
+  });
+  el.querySelectorAll('.list-act.del').forEach(function(b){
+    b.addEventListener('click',function(e){
+      e.stopPropagation();
+      var c=getClient(b.dataset.cid);
+      var name=c?c.name:'this client';
+      showConfirm('Delete Client?','Delete "'+name+'" and all their jobs? This cannot be undone.',function(){
+        DB.clients=DB.clients.filter(function(c){return c.id!==b.dataset.cid});
+        saveAll();renderClients();showToast('Client deleted','warn');
+      });
+    });
+  });
+}
+
+$('addClientFab').addEventListener('click',function(){openModal('New Client','client',null)});
+
+function openClient(cid){
+  DB.activeClientId=cid;saveAll();
+  renderJobs();showScreen('jobs');
+}
+
+// ========== SCREEN 2: JOBS ==========
+function renderJobs(){
+  var c=getClient(DB.activeClientId);
+  if(!c)return;
+  $('clientTitle').textContent=c.name;
+  var subParts=[];if(c.phone)subParts.push(c.phone);if(c.address)subParts.push(c.address);
+  $('clientSub').textContent=subParts.join(' \u00B7 ');
+  var el=$('jobsList');
+  var jobs=c.jobs||[];
+  if(jobs.length===0){
+    el.innerHTML='<div class="empty-state">'+
+      '<div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>'+
+      '<div class="empty-title">No jobs yet</div>'+
+      '<div class="empty-sub">Tap + to create a job and<br>start measuring rooms.</div></div>';return}
+  var h='';
+  jobs.forEach(function(j){
+    var totalSqFt=0;(j.areas||[]).forEach(function(a){totalSqFt+=a.sqft});
+    var aCount=(j.areas||[]).length;
+    h+='<div class="list-item glass-sm" data-jid="'+j.id+'">'+
+      '<div class="list-icon job">'+aCount+'</div>'+
+      '<div class="list-body"><div class="list-name">'+esc(j.name||'Untitled Job')+'</div>'+
+      '<div class="list-meta">'+aCount+' area'+(aCount!==1?'s':'')+' &middot; '+fmt(totalSqFt)+' sq ft'+(j.notes?' &middot; '+esc(j.notes.slice(0,30)):'')+'</div></div>'+
+      '<div class="list-actions">'+
+        '<button class="list-act del" data-jid="'+j.id+'" title="Delete job"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'+
+      '</div>'+
+      '<div class="list-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>'+
+    '</div>';
+  });
+  el.innerHTML=h;
+  el.querySelectorAll('.list-item').forEach(function(item){
+    item.addEventListener('click',function(e){
+      if(e.target.closest('.list-act'))return;
+      openJob(item.dataset.jid);
+    });
+  });
+  el.querySelectorAll('.list-act.del').forEach(function(b){
+    b.addEventListener('click',function(e){
+      e.stopPropagation();
+      var j=getJob(DB.activeClientId,b.dataset.jid);
+      var name=j?j.name:'this job';
+      showConfirm('Delete Job?','Delete "'+name+'" and all its areas? This cannot be undone.',function(){
+        c.jobs=c.jobs.filter(function(j){return j.id!==b.dataset.jid});
+        saveAll();renderJobs();showToast('Job deleted','warn');
+      });
+    });
+  });
+}
+
+$('addJobFab').addEventListener('click',function(){openModal('New Job','job',null)});
+$('backToClients').addEventListener('click',function(){showScreen('clients');renderClients()});
+$('editClientBtn').addEventListener('click',function(){
+  var c=getClient(DB.activeClientId);
+  if(c) openModal('Edit Client','client',c);
+});
+
+// ========== SCREEN 3: JOB CALCULATOR ==========
+var curJob=null, areaCounter=1, lFrac=0, wFrac=0, curAreaType='room';
+
+function openJob(jid){
+  DB.activeJobId=jid;saveAll();
+  curJob=getJob(DB.activeClientId,jid);
+  if(!curJob)return;
+  areaCounter=(curJob.areas||[]).length+1;
+  var c=getClient(DB.activeClientId);
+  $('calcTitle').textContent=curJob.name||'Untitled Job';
+  $('calcSub').textContent=c?c.name:'';
+  // Restore settings UI
+  $('jobNameInput').value=curJob.name||'';
+  // Restore notes
+  $('jobNotesInline').value=curJob.notes||'';
+  updateNoteCount();
+  if(curJob.notes&&curJob.notes.length>0){
+    $('notesToggle').classList.add('open');
+    $('notesArea').classList.add('show');
+  } else {
+    $('notesToggle').classList.remove('open');
+    $('notesArea').classList.remove('show');
+  }
+  if(curJob.showPricing){$('pricingToggle').classList.add('on');$('priceWrap').classList.add('show')}
+  else{$('pricingToggle').classList.remove('on');$('priceWrap').classList.remove('show')}
+  $('priceInput').value=curJob.pricePerSqYd||'';
+  // Waste
+  var wf=false;
+  document.querySelectorAll('.waste-btn').forEach(function(b){
+    if(parseInt(b.dataset.w)===(curJob.wastePct||10)){b.classList.add('active');wf=true}else{b.classList.remove('active')}
+  });
+  $('wasteCustom').value=wf?'':(curJob.wastePct||'');
+  renderAreas();updateTotals();showScreen('calc');
+  $('roomName').placeholder='Room '+areaCounter;
+}
+
+$('backToJobs').addEventListener('click',function(){
+  showScreen('jobs');renderJobs();
+  resetCalcInputs();
+});
+
+// Notes toggle
+$('notesToggle').addEventListener('click',function(){
+  var isOpen=$('notesArea').classList.contains('show');
+  $('notesToggle').classList.toggle('open',!isOpen);
+  $('notesArea').classList.toggle('show',!isOpen);
+  if(!isOpen)setTimeout(function(){$('jobNotesInline').focus()},150);
+});
+
+function updateNoteCount(){
+  var notes=curJob&&curJob.notes?curJob.notes.trim():'';
+  $('noteCount').textContent=notes.length>0?notes.length+' chars':'';
+}
+
+$('jobNotesInline').addEventListener('input',function(){
+  if(!curJob)return;
+  curJob.notes=$('jobNotesInline').value;
+  updateNoteCount();
+  saveAll();
+});
+
+// Tabs
+document.querySelectorAll('.tab').forEach(function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active')});
+    t.classList.add('active');
+    document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active')});
+    var id='panel'+t.dataset.tab.charAt(0).toUpperCase()+t.dataset.tab.slice(1);
+    $(id).classList.add('active');
+  });
+});
+
+// Area types
+$('areaTypeRow').addEventListener('click',function(e){
+  var btn=e.target.closest('.area-type-btn');if(!btn)return;
+  document.querySelectorAll('.area-type-btn').forEach(function(b){b.classList.remove('active')});
+  btn.classList.add('active');curAreaType=btn.dataset.type;
+  var names={room:'Living Room',hallway:'Hallway',closet:'Master Closet',landing:'Landing',custom:'Custom Area'};
+  $('roomName').placeholder=names[curAreaType]||'Area';
+});
+
+// Fractions
+function setupFrac(btn,dd,setFn){
+  btn.addEventListener('click',function(e){e.stopPropagation();
+    document.querySelectorAll('.frac-dd.show').forEach(function(d){if(d!==dd)d.classList.remove('show')});
+    dd.classList.toggle('show');btn.classList.toggle('open',dd.classList.contains('show'))});
+  dd.addEventListener('click',function(e){var opt=e.target.closest('.frac-opt');if(!opt)return;
+    setFn(parseFloat(opt.dataset.val));
+    dd.querySelectorAll('.frac-opt').forEach(function(o){o.classList.remove('active')});opt.classList.add('active');
+    btn.textContent=opt.textContent;dd.classList.remove('show');btn.classList.remove('open');updateLive()})
+}
+setupFrac($('lFracBtn'),$('lFracDD'),function(v){lFrac=v});
+setupFrac($('wFracBtn'),$('wFracDD'),function(v){wFrac=v});
+document.addEventListener('click',function(){document.querySelectorAll('.frac-dd.show').forEach(function(d){d.classList.remove('show')});document.querySelectorAll('.frac-btn.open').forEach(function(b){b.classList.remove('open')})});
+
+// Live calc
+function updateLive(){
+  var l=toDec($('lFt').value,$('lIn').value,lFrac),w=toDec($('wFt').value,$('wIn').value,wFrac);
+  var sqft=l*w;$('liveSqFt').textContent=fmt(sqft);$('liveSqYd').textContent=fmt(sqft/9)}
+[$('lFt'),$('lIn'),$('wFt'),$('wIn')].forEach(function(el){el.addEventListener('input',updateLive)});
+
+function updateStairs(){
+  var steps=parseInt($('stSteps').value)||0,w=parseFloat($('stWidth').value)||0,d=parseFloat($('stDepth').value)||0,r=parseFloat($('stRiser').value)||0;
+  var sqft=steps*(d+r)*w/144;$('stairsSqFt').textContent=fmt(sqft);$('stairsSqYd').textContent=fmt(sqft/9)}
+[$('stSteps'),$('stWidth'),$('stDepth'),$('stRiser')].forEach(function(el){el.addEventListener('input',updateStairs)});
+
+// Add room
+$('addRoomBtn').addEventListener('click',function(){
+  if(!curJob)return;
+  var l=toDec($('lFt').value,$('lIn').value,lFrac),w=toDec($('wFt').value,$('wIn').value,wFrac);
+  if(l<=0||w<=0){shake($('panelRoom').querySelector('.measure-card'));return}
+  var sqft=l*w;
+  var name=$('roomName').value.trim()||(curAreaType.charAt(0).toUpperCase()+curAreaType.slice(1)+' '+areaCounter);
+  if(!curJob.areas)curJob.areas=[];
+  curJob.areas.push({id:gid(),name:name,type:curAreaType,mode:'room',
+    lFt:$('lFt').value,lIn:$('lIn').value,lFrac:lFrac,wFt:$('wFt').value,wIn:$('wIn').value,wFrac:wFrac,
+    lengthDec:l,widthDec:w,sqft:sqft,sqyd:sqft/9});
+  areaCounter++;resetCalcInputs();renderAreas();updateTotals();saveAll();showToast('Added: '+name);$('lFt').focus()});
+
+$('addStairsBtn').addEventListener('click',function(){
+  if(!curJob)return;
+  var steps=parseInt($('stSteps').value)||0,w=parseFloat($('stWidth').value)||0,d=parseFloat($('stDepth').value)||0,r=parseFloat($('stRiser').value)||0;
+  if(steps<=0||w<=0||(d<=0&&r<=0)){shake($('panelStairs').querySelector('.measure-card'));return}
+  var sqft=steps*(d+r)*w/144;
+  var name=$('stairsName').value.trim()||('Stairs '+areaCounter);
+  if(!curJob.areas)curJob.areas=[];
+  curJob.areas.push({id:gid(),name:name,type:'stairs',mode:'stairs',steps:steps,treadWidth:w,treadDepth:d,riserHeight:r,sqft:sqft,sqyd:sqft/9});
+  areaCounter++;$('stSteps').value='';$('stWidth').value='';$('stDepth').value='';$('stRiser').value='';$('stairsName').value='';
+  updateStairs();renderAreas();updateTotals();saveAll();showToast('Added: '+name)});
+
+function resetCalcInputs(){
+  $('lFt').value='';$('lIn').value='';$('wFt').value='';$('wIn').value='';
+  lFrac=0;wFrac=0;$('lFracBtn').textContent='0';$('wFracBtn').textContent='0';
+  $('lFracDD').querySelectorAll('.frac-opt').forEach(function(o,i){o.classList.toggle('active',i===0)});
+  $('wFracDD').querySelectorAll('.frac-opt').forEach(function(o,i){o.classList.toggle('active',i===0)});
+  $('roomName').value='';$('roomName').placeholder=(curAreaType.charAt(0).toUpperCase()+curAreaType.slice(1))+' '+areaCounter;
+  updateLive();
+}
+
+// Render areas
+function renderAreas(){
+  if(!curJob)return;
+  var el=$('areasList'),areas=curJob.areas||[];
+  if(areas.length===0){
+    el.innerHTML='<div class="empty-state" style="padding:24px 16px">'+
+      '<div class="empty-icon" style="width:48px;height:48px;border-radius:14px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>'+
+      '<div class="empty-title" style="font-size:13px">No areas yet</div>'+
+      '<div class="empty-sub" style="font-size:12px">Measure and tap "Add to Job"</div></div>';
+    $('clearAllBtn').style.display='none';return}
+  $('clearAllBtn').style.display='block';el.innerHTML='';
+  areas.forEach(function(a){
+    var d=document.createElement('div');d.className='area-item glass-sm';
+    var dims=a.mode==='room'?fmtDim(a.lFt,a.lIn,a.lFrac)+' \u00D7 '+fmtDim(a.wFt,a.wIn,a.wFrac):a.steps+' steps \u00B7 '+a.treadWidth+'" wide';
+    d.innerHTML='<div class="area-badge '+esc(a.type)+'"></div><div class="area-info"><div class="area-name">'+esc(a.name)+'</div><div class="area-dims">'+dims+'</div></div>'+
+      '<div class="area-vals"><div class="area-sqft">'+fmt(a.sqft)+' ft\u00B2</div><div class="area-sqyd">'+fmt(a.sqyd)+' yd\u00B2</div></div>'+
+      '<div class="area-actions"><button class="area-act dup" data-id="'+a.id+'" title="Duplicate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>'+
+      '<button class="area-act del" data-id="'+a.id+'" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>';
+    el.appendChild(d)});
+  el.querySelectorAll('.area-act.del').forEach(function(b){b.addEventListener('click',function(){
+    curJob.areas=curJob.areas.filter(function(a){return a.id!==b.dataset.id});renderAreas();updateTotals();saveAll();showToast('Area removed','warn')})});
+  el.querySelectorAll('.area-act.dup').forEach(function(b){b.addEventListener('click',function(){
+    var orig=curJob.areas.find(function(a){return a.id===b.dataset.id});if(!orig)return;
+    var copy=JSON.parse(JSON.stringify(orig));copy.id=gid();copy.name=orig.name+' (copy)';
+    curJob.areas.push(copy);renderAreas();updateTotals();saveAll();showToast('Duplicated')})});
+}
+
+$('clearAllBtn').addEventListener('click',function(){
+  if(!curJob||!curJob.areas.length)return;
+  showConfirm('Clear All Areas?','Remove all '+curJob.areas.length+' areas from this job?',function(){
+    curJob.areas=[];areaCounter=1;renderAreas();updateTotals();saveAll();showToast('All areas cleared','warn');
+  });
+});
+
+// Totals
+function updateTotals(){
+  if(!curJob)return;
+  var raw=0;(curJob.areas||[]).forEach(function(a){raw+=a.sqft});
+  var rawYd=raw/9,waste=raw*((curJob.wastePct||10)/100),adj=raw+waste,adjYd=adj/9;
+  $('totalSqFt').textContent=fmt(raw);$('totalSqYd').textContent=fmt(rawYd);$('totalAdj').textContent=fmt(adj);
+  var costEl=document.getElementById('totalCostItem');
+  if(curJob.showPricing&&curJob.pricePerSqYd>0){
+    var cost=adjYd*curJob.pricePerSqYd;
+    if(!costEl){var dv=document.createElement('div');dv.className='total-div';dv.id='costDiv';
+      var it=document.createElement('div');it.className='total-item';it.id='totalCostItem';
+      it.innerHTML='<div class="total-val cost" id="totalCostVal">'+fmtC(cost)+'</div><div class="total-lbl">Est. Cost</div>';
+      $('totalsInner').appendChild(dv);$('totalsInner').appendChild(it)}
+    else document.getElementById('totalCostVal').textContent=fmtC(cost)
+  }else if(costEl){costEl.remove();var dd2=document.getElementById('costDiv');if(dd2)dd2.remove()}
+}
+
+// Waste
+$('wasteRow').addEventListener('click',function(e){var btn=e.target.closest('.waste-btn');if(!btn||!curJob)return;
+  document.querySelectorAll('.waste-btn').forEach(function(b){b.classList.remove('active')});btn.classList.add('active');
+  curJob.wastePct=parseInt(btn.dataset.w);$('wasteCustom').value='';updateTotals();saveAll()});
+$('wasteCustom').addEventListener('input',function(){if(!curJob)return;var v=parseInt($('wasteCustom').value);if(isNaN(v)||v<0)v=0;if(v>50)v=50;
+  document.querySelectorAll('.waste-btn').forEach(function(b){b.classList.remove('active')});curJob.wastePct=v;updateTotals();saveAll()});
+
+// Settings drawer
+function openDrawer(){$('drawer').classList.add('open');$('drawerOverlay').classList.add('open')}
+function closeDrawer(){$('drawer').classList.remove('open');$('drawerOverlay').classList.remove('open')}
+$('settingsBtn').addEventListener('click',openDrawer);
+$('drawerOverlay').addEventListener('click',closeDrawer);
+$('drawerOverlay').addEventListener('touchend',function(e){e.preventDefault();closeDrawer()});
+var tsy=0;$('drawer').addEventListener('touchstart',function(e){tsy=e.touches[0].clientY},{passive:true});
+$('drawer').addEventListener('touchmove',function(e){if(e.touches[0].clientY-tsy>60)closeDrawer()},{passive:true});
+$('pricingToggle').addEventListener('click',function(){if(!curJob)return;curJob.showPricing=!curJob.showPricing;
+  $('pricingToggle').classList.toggle('on',curJob.showPricing);$('priceWrap').classList.toggle('show',curJob.showPricing);updateTotals();saveAll()});
+$('priceInput').addEventListener('input',function(){if(!curJob)return;curJob.pricePerSqYd=parseFloat($('priceInput').value)||0;updateTotals();saveAll()});
+$('jobNameInput').addEventListener('input',function(){if(!curJob)return;curJob.name=$('jobNameInput').value.trim()||'Untitled Job';$('calcTitle').textContent=curJob.name;saveAll()});
+
+// Summary
+$('summaryBtn').addEventListener('click',function(){buildSummary();$('summaryOverlay').classList.add('open')});
+function closeSummary(){$('summaryOverlay').classList.remove('open')}
+function buildSummary(){
+  if(!curJob)return;var c=getClient(DB.activeClientId);
+  var raw=0;(curJob.areas||[]).forEach(function(a){raw+=a.sqft});
+  var rawYd=raw/9,waste=raw*((curJob.wastePct||10)/100),adj=raw+waste,adjYd=adj/9;
+  var h='<div class="summary-header"><div class="summary-title">Job Summary</div>'+
+    '<button class="summary-close" id="summaryClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>';
+  h+='<div class="summary-job-name">'+esc(curJob.name||'Untitled');
+  if(c) h+=' \u2014 '+esc(c.name);
+  h+='</div>';
+  if(curJob.notes&&curJob.notes.trim()){
+    h+='<div class="summary-notes glass-sm"><div class="summary-notes-label">Notes</div><div class="summary-notes-text">'+esc(curJob.notes)+'</div></div>';
+  }
+  if(!curJob.areas||curJob.areas.length===0){h+='<div class="empty-state" style="padding:24px"><div class="empty-title" style="font-size:13px">No areas yet.</div></div>'}
+  else{
+    h+='<div class="summary-card glass">';(curJob.areas||[]).forEach(function(a){
+      h+='<div class="summary-row"><span class="summary-row-name">'+esc(a.name)+'</span><span class="summary-row-val">'+fmt(a.sqft)+' ft\u00B2</span></div>'});h+='</div>';
+    h+='<div class="summary-total-card glass">';
+    h+='<div class="summary-total-row"><span class="summary-total-label">Raw Total</span><span class="summary-total-val">'+fmt(raw)+' sq ft / '+fmt(rawYd)+' sq yd</span></div>';
+    h+='<div class="summary-divider"></div>';
+    h+='<div class="summary-total-row"><span class="summary-total-label">Waste ('+(curJob.wastePct||10)+'%)</span><span class="summary-total-val warn">+ '+fmt(waste)+' sq ft</span></div>';
+    h+='<div class="summary-total-row"><span class="summary-total-label">Order Total</span><span class="summary-total-val highlight">'+fmt(adj)+' sq ft / '+fmt(adjYd)+' sq yd</span></div>';
+    if(curJob.showPricing&&curJob.pricePerSqYd>0){h+='<div class="summary-divider"></div>';
+      h+='<div class="summary-total-row"><span class="summary-total-label">Estimated Cost</span><span class="summary-total-val success">'+fmtC(adjYd*curJob.pricePerSqYd)+'</span></div>'}
+    h+='</div>'}
+  h+='<div class="summary-actions"><button class="btn-secondary" id="copyBtn">Copy</button><button class="btn-primary" id="shareBtn">Share</button></div>';
+  $('summaryContent').innerHTML=h;
+  $('summaryClose').addEventListener('click',closeSummary);
+  $('copyBtn').addEventListener('click',copySummaryText);
+  $('shareBtn').addEventListener('click',shareSummary)}
+function buildText(){
+  if(!curJob)return'';var c=getClient(DB.activeClientId);
+  var raw=0;(curJob.areas||[]).forEach(function(a){raw+=a.sqft});
+  var rawYd=raw/9,waste=raw*((curJob.wastePct||10)/100),adj=raw+waste,adjYd=adj/9;
+  var t='Job: '+(curJob.name||'Untitled')+'\n';if(c)t+='Client: '+c.name+(c.phone?' | '+c.phone:'')+'\n';
+  if(curJob.notes)t+='Notes: '+curJob.notes+'\n';t+='---\n';
+  (curJob.areas||[]).forEach(function(a){t+=a.name+' \u2014 '+fmt(a.sqft)+' sq ft ('+fmt(a.sqyd)+' sq yd)\n'});
+  t+='---\nRaw: '+fmt(raw)+' sq ft / '+fmt(rawYd)+' sq yd\nWaste ('+(curJob.wastePct||10)+'%): + '+fmt(waste)+' sq ft\nOrder: '+fmt(adj)+' sq ft / '+fmt(adjYd)+' sq yd\n';
+  if(curJob.showPricing&&curJob.pricePerSqYd>0)t+='Est. Cost: '+fmtC(adjYd*curJob.pricePerSqYd)+'\n';return t}
+function copySummaryText(){var t=buildText();if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){showToast('Copied to clipboard')}).catch(function(){fbCopy(t)})}else fbCopy(t)}
+function fbCopy(t){var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');showToast('Copied to clipboard')}catch(e){showToast('Copy failed','error')}document.body.removeChild(ta)}
+function shareSummary(){var t=buildText();if(navigator.share)navigator.share({title:(curJob?curJob.name:'Job'),text:t}).catch(function(){});else copySummaryText()}
+
+// ========== MODAL ==========
+var modalOverlay=$('modalOverlay'),modal=$('modal');
+function openModal(title,type,existing){
+  $('modalTitle').textContent=title;
+  var h='';
+  if(type==='client'){
+    h+='<input class="modal-field" id="mName" placeholder="Client name" value="'+esc((existing?existing.name:''))+'">'+
+      '<input class="modal-field" id="mPhone" placeholder="Phone (optional)" value="'+esc((existing?existing.phone||'':''))+'">'+
+      '<input class="modal-field" id="mAddr" placeholder="Address (optional)" value="'+esc((existing?existing.address||'':''))+'">'+
+      '<div class="modal-row"><button class="btn-secondary" id="mCancel">Cancel</button><button class="btn-primary" id="mSave">Save</button></div>';
+  } else {
+    h+='<input class="modal-field" id="mJobName" placeholder="Job name (e.g. Kitchen Remodel)" value="">'+
+      '<textarea class="modal-field" id="mJobNotes" placeholder="Address, notes, special instructions..." style="resize:none;min-height:70px;font-size:13px;line-height:1.5"></textarea>'+
+      '<div class="modal-row"><button class="btn-secondary" id="mCancel">Cancel</button><button class="btn-primary" id="mSave">Save</button></div>';
+  }
+  $('modalBody').innerHTML=h;
+  modalOverlay.classList.add('open');
+  setTimeout(function(){($(type==='client'?'mName':'mJobName')).focus()},150);
+
+  $('mCancel').addEventListener('click',closeModal);
+  modalOverlay.addEventListener('click',function handler(e){if(e.target===modalOverlay){closeModal();modalOverlay.removeEventListener('click',handler)}});
+
+  $('mSave').addEventListener('click',function(){
+    if(type==='client'){
+      var name=$('mName').value.trim();if(!name){shake(modal);return}
+      if(existing){existing.name=name;existing.phone=$('mPhone').value.trim();existing.address=$('mAddr').value.trim();
+        $('clientTitle').textContent=name;
+        var subParts=[];if(existing.phone)subParts.push(existing.phone);if(existing.address)subParts.push(existing.address);
+        $('clientSub').textContent=subParts.join(' \u00B7 ')}
+      else{DB.clients.push({id:gid(),name:name,phone:$('mPhone').value.trim(),address:$('mAddr').value.trim(),jobs:[]})}
+      saveAll();renderClients();closeModal();showToast(existing?'Client updated':'Client added');
+    } else {
+      var jname=$('mJobName').value.trim()||'Untitled Job';
+      var c=getClient(DB.activeClientId);if(!c)return;
+      if(!c.jobs)c.jobs=[];
+      var newJob={id:gid(),name:jname,notes:$('mJobNotes').value.trim(),areas:[],wastePct:10,pricePerSqYd:0,showPricing:false};
+      c.jobs.push(newJob);saveAll();closeModal();
+      openJob(newJob.id);showToast('Job created');
+    }
+  });
+}
+function closeModal(){modalOverlay.classList.remove('open')}
+
+function shake(el){el.style.transform='translateX(-4px)';setTimeout(function(){el.style.transform='translateX(4px)'},60);
+  setTimeout(function(){el.style.transform='translateX(-2px)'},120);setTimeout(function(){el.style.transform=''},180)}
+
+// ========== INIT ==========
+renderClients();
+if(DB.activeClientId && DB.activeJobId && getJob(DB.activeClientId,DB.activeJobId)){
+  openJob(DB.activeJobId);
+} else if(DB.activeClientId && getClient(DB.activeClientId)){
+  renderJobs();showScreen('jobs');
+}
+
+})();
+</script>
+</body>
+</html>
